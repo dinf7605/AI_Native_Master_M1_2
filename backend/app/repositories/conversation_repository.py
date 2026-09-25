@@ -16,6 +16,7 @@ class ConversationRepository(Protocol):
     def list_summaries(self) -> list[dict[str, Any]]: ...
     def get(self, conversation_id: str) -> dict[str, Any] | None: ...
     def create(self, fields: dict[str, Any]) -> dict[str, Any]: ...
+    def update(self, conversation_id: str, fields: dict[str, Any]) -> None: ...
     def delete(self, conversation_id: str) -> None: ...
 
 
@@ -38,6 +39,9 @@ class FirestoreConversationRepository:
         ref = self._collection.document()
         ref.set(fields)
         return {"id": ref.id, **fields}
+
+    def update(self, conversation_id: str, fields: dict[str, Any]) -> None:
+        self._collection.document(conversation_id).update(fields)
 
     def delete(self, conversation_id: str) -> None:
         self._collection.document(conversation_id).delete()

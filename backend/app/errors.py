@@ -19,5 +19,21 @@ class DuplicateDateError(AppError):
     status_code = 409
 
 
+class ConversationLimitError(AppError):
+    status_code = 409
+
+
+class LLMRequestError(AppError):
+    """AI(GPT) 호출이 실패했거나 빈 응답을 받았다."""
+
+    status_code = 502
+
+
 class DatabaseUnavailableError(AppError):
+    status_code = 503
+
+
+class LLMUnavailableError(AppError):
+    """AI 호출 설정(키 등)이 없거나 잘못되었다."""
+
     status_code = 503

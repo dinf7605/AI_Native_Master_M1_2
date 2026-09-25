@@ -13,7 +13,7 @@ from google.api_core.exceptions import GoogleAPIError
 
 from app.config import get_allowed_origins
 from app.errors import AppError
-from app.routers import conversations, data
+from app.routers import chat, conversations, data
 
 logger = logging.getLogger(__name__)
 
@@ -57,3 +57,4 @@ def health() -> dict[str, str]:
 
 app.include_router(data.router)
 app.include_router(conversations.router)
+app.include_router(chat.router)

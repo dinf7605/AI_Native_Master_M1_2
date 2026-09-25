@@ -63,7 +63,7 @@
 | 1 | 데이터 확보 & 분석 | 선정한 환율/주가 100+ 포인트가 준비되고, 요약 정보(기간/개수/통계/추세)를 산출할 수 있다 | complete | `.claude/plans/fx-data-ai-chat-m1-data-analysis.plan.md` |
 | 2 | 데이터 API (Firestore) | Swagger UI에서 data CRUD 4개와 summary를 호출하고 결과를 확인할 수 있다. 잘못된 입력은 거부된다 | complete | `.claude/plans/fx-data-ai-chat-m2-data-api.plan.md` |
 | 3 | 대화 기록 API | Swagger UI에서 대화 저장, 목록, 단건 조회, 삭제가 동작한다 | complete | `.claude/plans/fx-data-ai-chat-m3-conversations-api.plan.md` |
-| 4 | 컨텍스트 주입 AI 채팅 API | 질문하면 요약을 반영한 답변이 오고, 대화가 자동 저장된다 | pending | — |
+| 4 | 컨텍스트 주입 AI 채팅 API | 질문하면 요약을 반영한 답변이 오고, 대화가 자동 저장된다 | complete | `.claude/plans/fx-data-ai-chat-m4-chat-api.plan.md` |
 | 5 | 바닐라 프론트엔드 (필수 화면) | 채팅+로딩, 데이터 관리, 요약 표시, 대화 목록/불러오기를 한 화면 흐름에서 쓸 수 있다 | pending | — |
 | 6 | 인사이트·UX 보너스 | 추가 지표, 추세 그래프, CSV/JSON 내보내기, 다크 모드가 동작한다 | pending | — |
 | 7 | 배포 & 문서화 | Render/Vercel URL로 접속할 수 있고, 배포된 `/docs`와 콜드스타트 안내가 확인되며, README와 스크린샷 3종이 완성된다 | pending | — |
@@ -74,9 +74,9 @@
 - [x] **같은 date의 중복 데이터를 허용하나?** → 허용하지 않는다. 생성·수정 시 409. 마일스톤 2에서 확정.
 - [x] **"최근 추세"의 정의** → 최근 7포인트 평균을 직전 7포인트 평균과 비교하고, ±0.5% 미만이면 유지. 마일스톤 1에서 확정.
 - [ ] **추가 지표는 무엇으로 하나?** 후보: 표준편차/변동성, 이동평균, 최근 N일 변화율, 최대 낙폭.
-- [ ] **채팅 1회 = 새 대화인가, 기존 대화에 이어 쓰기인가?** 불러온 대화에서 이어 질문할 때 이전 메시지를 GPT에 함께 보낼지도 정해야 한다.
+- [x] **채팅 1회 = 새 대화인가, 기존 대화에 이어 쓰기인가?** → `conversation_id`가 없으면 새 대화, 있으면 이어 쓰기. 최근 10개 메시지를 GPT에 함께 보낸다. 마일스톤 4에서 확정.
 - [ ] **Vercel 환경 변수로 API URL을 주입하는 방식**: 바닐라 정적 사이트는 런타임 환경 변수가 없다. 빌드 시 설정 파일을 생성하는 등 과제 요건을 충족할 방법을 확인해야 한다.
-- [ ] **OpenAI 모델과 토큰/요청 상한**: 사용할 모델, max_tokens 값, 개발 중 호출 횟수 제한을 정해야 한다.
+- [x] **OpenAI 모델과 토큰/요청 상한** → 코디세이 게이트웨이(`https://copa.codyssey.kr/v1`), `gpt-5.4` (5.5는 차감 2배). `max_completion_tokens` 700, 질문 1000자, 이력 10개. 요청 빈도 제한은 배포 마일스톤에서 검토한다.
 
 ## Risks
 | Risk | Likelihood | Impact | Mitigation |

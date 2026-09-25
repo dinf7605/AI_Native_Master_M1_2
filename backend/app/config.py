@@ -6,17 +6,28 @@
 
 import json
 import os
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 
-from app.errors import DatabaseUnavailableError
+from app.errors import DatabaseUnavailableError, LLMUnavailableError
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BACKEND_DIR / ".env")
 
 DEFAULT_ALLOWED_ORIGINS = "http://localhost:5500,http://127.0.0.1:5500"
+DEFAULT_OPENAI_MODEL = "gpt-5.4"
+DEFAULT_MAX_COMPLETION_TOKENS = 700
+
+
+@dataclass(frozen=True)
+class OpenAISettings:
+    api_key: str = field(repr=False)  # repr/로그에 키가 찍히지 않도록 제외
+    base_url: str | None
+    model: str
+    max_completion_tokens: int
 
 
 def get_allowed_origins() -> list[str]:
@@ -52,4 +63,26 @@ def load_firebase_credentials() -> dict[str, Any] | str:
     raise DatabaseUnavailableError(
         "Firebase 서비스 계정 설정이 없습니다. "
         "FIREBASE_SERVICE_ACCOUNT_JSON 또는 FIREBASE_SERVICE_ACCOUNT_PATH를 설정하세요."
+    )
+
+
+def get_openai_settings() -> OpenAISettings:
+    """OpenAI(호환) API 설정. OPENAI_BASE_URL을 비우면 OpenAI 공식 API를 쓴다."""
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        raise LLMUnavailableError("OPENAI_API_KEY가 설정되지 않았습니다.")
+
+    raw_max = os.getenv("OPENAI_MAX_COMPLETION_TOKENS", "").strip()
+    try:
+        max_completion_tokens = int(raw_max) if raw_max else DEFAULT_MAX_COMPLETION_TOKENS
+    except ValueError:
+        max_completion_tokens = 0
+    if max_completion_tokens <= 0:
+        raise LLMUnavailableError("OPENAI_MAX_COMPLETION_TOKENS는 양의 정수여야 합니다.")
+
+    return OpenAISettings(
+        api_key=api_key,
+        base_url=os.getenv("OPENAI_BASE_URL", "").strip() or None,
+        model=os.getenv("OPENAI_MODEL", "").strip() or DEFAULT_OPENAI_MODEL,
+        max_completion_tokens=max_completion_tokens,
     )

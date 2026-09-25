@@ -60,5 +60,25 @@ class InMemoryConversationRepository:
         self._items[conversation_id] = {"id": conversation_id, **deepcopy(fields)}
         return deepcopy(self._items[conversation_id])
 
+    def update(self, conversation_id: str, fields: dict[str, Any]) -> None:
+        self._items[conversation_id].update(deepcopy(fields))
+
     def delete(self, conversation_id: str) -> None:
         self._items.pop(conversation_id, None)
+
+
+class FakeLLMClient:
+    """실제 GPT를 호출하지 않는 LLM. 받은 messages를 calls에 기록한다."""
+
+    model = "fake-model"
+
+    def __init__(self, reply: str = "요약에 따르면 최근 추세는 증가입니다.", error: Exception | None = None):
+        self.reply = reply
+        self.error = error
+        self.calls: list[list[dict[str, str]]] = []
+
+    def complete(self, messages: list[dict[str, str]]) -> str:
+        self.calls.append(deepcopy(messages))
+        if self.error:
+            raise self.error
+        return self.reply
