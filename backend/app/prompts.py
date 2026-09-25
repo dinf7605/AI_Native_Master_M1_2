@@ -39,6 +39,13 @@ def _format_summary(summary: dict[str, Any]) -> str:
         f"- 최신: {_won(summary['latest']['value'])} ({summary['latest']['date']})",
         f"- 최근 추세: {_format_trend(summary['trend'])}",
     ]
+    if summary.get("period_change"):
+        change = summary["period_change"]
+        lines.append(
+            f"- 기간 전체 변화: 첫 값 대비 최신 값 {change['value']:+,.2f}원 ({change['pct']:+.2f}%)"
+        )
+    if summary.get("std_dev") is not None:
+        lines.append(f"- 변동성(표준편차): {_won(summary['std_dev'])}")
     return "\n".join(lines)
 
 

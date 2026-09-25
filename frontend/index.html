@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>환율 데이터 AI 채팅</title>
     <meta name="description" content="저장된 USD/KRW 환율 데이터 요약을 근거로 답하는 AI 채팅" />
+    <script>
+      // 첫 페인트 전에 테마를 정해 깜빡임을 막는다. 저장된 선택이 없으면 시스템 설정을 따른다.
+      (function () {
+        var theme;
+        try {
+          theme = localStorage.getItem("theme");
+        } catch (e) {}
+        if (theme !== "light" && theme !== "dark") {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
     <link rel="stylesheet" href="css/styles.css" />
     <script type="module" src="js/app.js"></script>
   </head>
@@ -14,7 +27,10 @@
         <h1>USD/KRW 환율 AI 채팅</h1>
         <p class="subtitle">저장된 환율 데이터 요약을 근거로 답하는 AI</p>
       </div>
-      <span id="server-status" class="status-badge" data-state="checking" role="status">서버 확인 중</span>
+      <div class="header-actions">
+        <span id="server-status" class="status-badge" data-state="checking" role="status">서버 확인 중</span>
+        <button id="theme-toggle" class="btn btn-small" type="button">🌙 다크 모드</button>
+      </div>
     </header>
 
     <div id="wake-banner" class="banner" role="status" hidden>
@@ -34,6 +50,12 @@
         <div class="stat stat-wide">
           <dt>최근 추세</dt><dd id="sum-trend" data-tone="none">-</dd><small id="sum-trend-detail"></small>
         </div>
+        <div class="stat">
+          <dt>기간 전체 변화</dt><dd id="sum-change" data-tone="none">-</dd><small id="sum-change-pct"></small>
+        </div>
+        <div class="stat">
+          <dt>변동성 (표준편차)</dt><dd id="sum-std">-</dd><small>클수록 등락이 큼</small>
+        </div>
       </dl>
     </section>
 
@@ -51,6 +73,7 @@
         <div class="tabs" role="tablist" aria-label="화면 선택">
           <button id="tab-chat" class="tab" role="tab" type="button" aria-selected="true" aria-controls="panel-chat">채팅</button>
           <button id="tab-data" class="tab" role="tab" type="button" aria-selected="false" aria-controls="panel-data">데이터 관리</button>
+          <button id="tab-chart" class="tab" role="tab" type="button" aria-selected="false" aria-controls="panel-chart">추세 그래프</button>
         </div>
 
         <section id="panel-chat" class="panel chat-panel" role="tabpanel" aria-labelledby="tab-chat">
@@ -93,7 +116,13 @@
             </div>
           </form>
 
-          <h2 class="table-title">데이터 목록 <span id="data-count" class="muted"></span></h2>
+          <div class="table-head">
+            <h2 class="table-title">데이터 목록 <span id="data-count" class="muted"></span></h2>
+            <div class="export-actions">
+              <button id="export-csv" class="btn btn-small" type="button">CSV 다운로드</button>
+              <button id="export-json" class="btn btn-small" type="button">JSON 다운로드</button>
+            </div>
+          </div>
           <div class="table-wrap">
             <table class="data-table">
               <thead>
@@ -107,6 +136,18 @@
               <tbody id="data-rows"></tbody>
             </table>
           </div>
+        </section>
+
+        <section id="panel-chart" class="panel chart-panel" role="tabpanel" aria-labelledby="tab-chart" hidden>
+          <h2 id="chart-title" class="chart-title">USD/KRW 환율 추이</h2>
+          <p id="chart-desc" class="muted chart-desc"></p>
+          <div id="chart" class="chart"></div>
+          <div class="chart-legend" aria-hidden="true">
+            <span><i class="legend-line"></i>환율</span>
+            <span><i class="legend-line legend-ma"></i>7일 이동평균</span>
+            <span><i class="legend-dot"></i>최고·최저</span>
+          </div>
+          <p class="hint">그래프 위에 마우스를 올리면 날짜별 값을 볼 수 있습니다.</p>
         </section>
       </main>
     </div>

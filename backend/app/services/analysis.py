@@ -5,7 +5,7 @@ Firestore/OpenAI에 의존하지 않으므로 네트워크 없이 테스트할 �
 """
 
 from collections.abc import Iterable, Mapping
-from statistics import fmean
+from statistics import fmean, stdev
 from typing import Any
 
 DEFAULT_WINDOW = 7
@@ -37,6 +37,8 @@ def build_summary(
             "max": None,
             "latest": None,
             "trend": dict(INSUFFICIENT_TREND),
+            "std_dev": None,
+            "period_change": None,
         }
 
     values = [float(r["value"]) for r in ordered]
@@ -50,7 +52,17 @@ def build_summary(
         "max": _point(max(ordered, key=lambda r: float(r["value"]))),
         "latest": _point(ordered[-1]),
         "trend": _trend(values, window, flat_threshold_pct),
+        # 추가 지표: 변동성(표본 표준편차)과 기간 전체 변화(첫 값 → 최신 값)
+        "std_dev": round(stdev(values), 2) if len(values) >= 2 else None,
+        "period_change": _period_change(values),
     }
+
+
+def _period_change(values: list[float]) -> dict[str, float] | None:
+    if len(values) < 2 or values[0] == 0:
+        return None
+    change = values[-1] - values[0]
+    return {"value": round(change, 2), "pct": round(change / abs(values[0]) * 100, 2)}
 
 
 def _point(record: Mapping[str, Any]) -> dict[str, Any]:

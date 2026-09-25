@@ -1,7 +1,20 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { errorMessage, formatKst, formatTrend, formatWon, sortByDateDesc } from "../js/format.js";
+import {
+  errorMessage,
+  formatKst,
+  formatSignedWon,
+  formatTrend,
+  formatWon,
+  sortByDateDesc,
+} from "../js/format.js";
+
+test("formatSignedWon: 부호를 붙인 금액", () => {
+  assert.equal(formatSignedWon(-93.51), "-93.51원");
+  assert.equal(formatSignedWon(1234.5), "+1,234.50원");
+  assert.equal(formatSignedWon(null), "-");
+});
 
 test("formatWon: 천 단위 구분과 소수 2자리", () => {
   assert.equal(formatWon(1466.6), "1,466.60원");

@@ -10,7 +10,19 @@ SUMMARY = {
     "max": {"value": 1558.09, "date": "2026-07-01"},
     "latest": {"value": 1368.6, "date": "2026-09-24"},
     "trend": {"direction": "increase", "change_pct": 1.94, "window": 7},
+    "std_dev": 52.31,
+    "period_change": {"value": -93.51, "pct": -6.4},
 }
+
+
+def test_prompt_contains_extra_metrics():
+    prompt = build_system_prompt(SUMMARY)
+
+    assert "표준편차" in prompt
+    assert "52.31" in prompt
+    assert "기간 전체 변화" in prompt
+    assert "-93.51원" in prompt
+    assert "-6.40%" in prompt
 
 
 def test_prompt_contains_every_summary_figure():

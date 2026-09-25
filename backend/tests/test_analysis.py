@@ -101,6 +101,40 @@ def test_single_point_has_insufficient_trend():
     assert summary["trend"]["direction"] == "insufficient_data"
 
 
+def test_std_dev_is_sample_standard_deviation():
+    summary = build_summary(make_records([10.0, 20.0, 30.0]))
+
+    assert summary["std_dev"] == pytest.approx(10.0)
+
+
+def test_period_change_compares_first_and_latest_value():
+    records = [
+        {"date": "2026-01-04", "value": 120.0},
+        {"date": "2026-01-01", "value": 100.0},
+        {"date": "2026-01-02", "value": 110.0},
+        {"date": "2026-01-03", "value": 90.0},
+    ]
+
+    summary = build_summary(records)
+
+    assert summary["period_change"] == {"value": 20.0, "pct": 20.0}
+
+
+def test_period_change_can_be_negative():
+    summary = build_summary(make_records([1462.11, 1500.0, 1368.6]))
+
+    assert summary["period_change"]["value"] == pytest.approx(-93.51)
+    assert summary["period_change"]["pct"] == pytest.approx(-6.4)
+
+
+@pytest.mark.parametrize("values", [[], [1400.0]])
+def test_extra_metrics_are_none_when_fewer_than_two_points(values):
+    summary = build_summary(make_records(values))
+
+    assert summary["std_dev"] is None
+    assert summary["period_change"] is None
+
+
 def test_custom_window_and_threshold():
     records = make_records([100.0] * 3 + [100.8] * 3)
 

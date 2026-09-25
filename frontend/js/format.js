@@ -45,6 +45,11 @@ export function formatWon(value) {
   return `${wonFormat.format(value)}원`;
 }
 
+export function formatSignedWon(value) {
+  if (value === null || value === undefined || Number.isNaN(value)) return "-";
+  return `${value >= 0 ? "+" : "-"}${wonFormat.format(Math.abs(value))}원`;
+}
+
 export function formatTrend(trend) {
   const known = TRENDS[trend?.direction];
   if (!known) return { label: "판단 불가", detail: "데이터가 부족합니다", tone: "none" };

@@ -1,7 +1,10 @@
 // 화면 로직. 서버·사용자·AI가 만든 텍스트는 모두 textContent로만 넣는다(innerHTML 사용 안 함).
 
 import { api } from "./api.js";
-import { formatKst, formatTrend, formatWon, sortByDateDesc } from "./format.js";
+import { buildChartModel, nearestIndex } from "./chart.js";
+import { downloadText, exportFilename, toCsv, toJson } from "./export.js";
+import { formatKst, formatSignedWon, formatTrend, formatWon, sortByDateDesc } from "./format.js";
+import { initThemeToggle } from "./theme.js";
 
 const WAKE_BANNER_DELAY_MS = 3000; // 이보다 오래 걸리면 "서버 깨우는 중" 안내
 const WAKE_MAX_MS = 90000; // Render 무료 플랜 콜드스타트 여유
@@ -16,6 +19,7 @@ const state = {
   editingId: null,
   sending: false,
   flashDate: null,
+  dataItems: [], // 날짜 오름차순. 그래프와 내보내기에 사용
 };
 
 // ---------- 공통 ----------
@@ -102,6 +106,15 @@ function renderSummary(summary) {
   trendEl.textContent = `${TREND_ARROWS[trend.tone] ?? ""} ${trend.label}`.trim();
   trendEl.dataset.tone = trend.tone;
   $("sum-trend-detail").textContent = trend.detail;
+
+  const change = summary.period_change;
+  const changeEl = $("sum-change");
+  changeEl.textContent = formatSignedWon(change?.value);
+  changeEl.dataset.tone = !change ? "none" : change.value > 0 ? "up" : change.value < 0 ? "down" : "flat";
+  $("sum-change-pct").textContent = change
+    ? `${change.pct >= 0 ? "+" : ""}${change.pct.toFixed(2)}% (첫 값 대비)`
+    : "";
+  $("sum-std").textContent = formatWon(summary.std_dev);
 }
 
 async function loadSummary() {
@@ -311,10 +324,144 @@ function renderDataRows(items) {
 
 async function loadData() {
   try {
-    renderDataRows(sortByDateDesc(await api.listData()));
+    const items = await api.listData(); // 서버가 날짜 오름차순으로 준다
+    state.dataItems = items;
+    renderDataRows(sortByDateDesc(items));
+    renderChart(items);
   } catch (error) {
     showToast(`데이터를 불러오지 못했습니다: ${error.message}`);
   }
+}
+
+function exportData(format) {
+  if (!state.dataItems.length) {
+    showToast("내보낼 데이터가 없습니다.");
+    return;
+  }
+  if (format === "csv") {
+    // BOM을 붙여야 엑셀에서 한글이 깨지지 않는다.
+    downloadText(`﻿${toCsv(state.dataItems)}`, exportFilename("csv"), "text/csv;charset=utf-8");
+  } else {
+    downloadText(toJson(state.dataItems), exportFilename("json"), "application/json");
+  }
+  showToast(`${state.dataItems.length}개 데이터를 ${format.toUpperCase()} 파일로 내보냈습니다.`, "success");
+}
+
+// ---------- 추세 그래프 (SVG, 라이브러리 없음) ----------
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const TOOLTIP_WIDTH = 176;
+const TOOLTIP_HEIGHT = 48;
+const axisFormat = new Intl.NumberFormat("ko-KR");
+const clamp = (value, low, high) => Math.min(Math.max(value, low), high);
+
+function svgEl(tag, attrs = {}, text) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function renderChart(items) {
+  const container = $("chart");
+  const model = buildChartModel(items);
+  if (!model) {
+    container.replaceChildren(createEl("p", "muted", "그래프를 그리려면 데이터가 2개 이상 필요합니다."));
+    $("chart-desc").textContent = "";
+    return;
+  }
+
+  const { width, height, padding, points } = model;
+  const svg = svgEl("svg", {
+    viewBox: `0 0 ${width} ${height}`,
+    class: "chart-svg",
+    role: "img",
+    "aria-labelledby": "chart-title chart-desc",
+  });
+
+  for (const tick of model.yTicks) {
+    svg.append(
+      svgEl("line", { x1: padding.left, x2: width - padding.right, y1: tick.y, y2: tick.y, class: "chart-grid" }),
+      svgEl(
+        "text",
+        { x: padding.left - 8, y: tick.y + 4, "text-anchor": "end", class: "chart-label" },
+        axisFormat.format(tick.value),
+      ),
+    );
+  }
+  for (const tick of model.xTicks) {
+    svg.append(
+      svgEl("text", { x: tick.x, y: height - 10, "text-anchor": "middle", class: "chart-label" }, tick.label),
+    );
+  }
+  if (model.maPath) svg.append(svgEl("path", { d: model.maPath, class: "chart-ma" }));
+  svg.append(svgEl("path", { d: model.linePath, class: "chart-line" }));
+
+  for (const [index, kind, label] of [
+    [model.maxIndex, "max", "최고"],
+    [model.minIndex, "min", "최저"],
+  ]) {
+    const point = points[index];
+    svg.append(
+      svgEl("circle", { cx: point.x, cy: point.y, r: 4.5, class: `chart-extreme ${kind}` }),
+      svgEl(
+        "text",
+        {
+          x: clamp(point.x, padding.left + 50, width - padding.right - 50),
+          y: kind === "max" ? point.y - 10 : point.y + 18,
+          "text-anchor": "middle",
+          class: `chart-extreme-label ${kind}`,
+        },
+        `${label} ${formatWon(point.value)}`,
+      ),
+    );
+  }
+
+  // 마우스 위치에서 가장 가까운 날짜의 값을 보여주는 툴팁
+  const hover = svgEl("g", { visibility: "hidden" });
+  const hoverLine = svgEl("line", { y1: padding.top, y2: height - padding.bottom, class: "chart-hover-line" });
+  const hoverDot = svgEl("circle", { r: 5, class: "chart-hover-dot" });
+  const tipBox = svgEl("rect", { width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT, rx: 6, class: "chart-tooltip-box" });
+  const tipTitle = svgEl("text", { class: "chart-tooltip-text strong" });
+  const tipDetail = svgEl("text", { class: "chart-tooltip-text" });
+  hover.append(hoverLine, hoverDot, tipBox, tipTitle, tipDetail);
+  svg.append(hover);
+
+  const showPoint = (index) => {
+    const point = points[index];
+    const boxX =
+      point.x + 12 + TOOLTIP_WIDTH > width - padding.right ? point.x - 12 - TOOLTIP_WIDTH : point.x + 12;
+    const boxY = clamp(point.y - TOOLTIP_HEIGHT / 2, padding.top, height - padding.bottom - TOOLTIP_HEIGHT);
+    hoverLine.setAttribute("x1", point.x);
+    hoverLine.setAttribute("x2", point.x);
+    hoverDot.setAttribute("cx", point.x);
+    hoverDot.setAttribute("cy", point.y);
+    tipBox.setAttribute("x", boxX);
+    tipBox.setAttribute("y", boxY);
+    tipTitle.setAttribute("x", boxX + 10);
+    tipTitle.setAttribute("y", boxY + 19);
+    tipTitle.textContent = `${point.date}  ${formatWon(point.value)}`;
+    tipDetail.setAttribute("x", boxX + 10);
+    tipDetail.setAttribute("y", boxY + 37);
+    tipDetail.textContent = `${model.maWindow}일 평균 ${formatWon(point.average)}`;
+    hover.setAttribute("visibility", "visible");
+  };
+  svg.addEventListener("pointermove", (event) => {
+    const rect = svg.getBoundingClientRect();
+    showPoint(nearestIndex(points, ((event.clientX - rect.left) / rect.width) * width));
+  });
+  svg.addEventListener("pointerleave", () => hover.setAttribute("visibility", "hidden"));
+
+  container.replaceChildren(svg);
+
+  const first = points[0];
+  const last = points[points.length - 1];
+  const high = points[model.maxIndex];
+  const low = points[model.minIndex];
+  $("chart-desc").textContent =
+    `${first.date} ~ ${last.date} (${points.length}개). ` +
+    `최고 ${formatWon(high.value)} (${high.date}), 최저 ${formatWon(low.value)} (${low.date}), ` +
+    `최신 ${formatWon(last.value)}. 점선은 ${model.maWindow}일 이동평균입니다.`;
 }
 
 function startEdit(item) {
@@ -382,7 +529,7 @@ async function deleteData(item) {
 // ---------- 탭 / 이벤트 ----------
 
 function switchTab(name) {
-  for (const tab of ["chat", "data"]) {
+  for (const tab of ["chat", "data", "chart"]) {
     const selected = tab === name;
     $(`tab-${tab}`).setAttribute("aria-selected", String(selected));
     $(`panel-${tab}`).hidden = !selected;
@@ -392,7 +539,11 @@ function switchTab(name) {
 function bindEvents() {
   $("tab-chat").addEventListener("click", () => switchTab("chat"));
   $("tab-data").addEventListener("click", () => switchTab("data"));
+  $("tab-chart").addEventListener("click", () => switchTab("chart"));
   $("new-chat").addEventListener("click", startNewChat);
+  $("export-csv").addEventListener("click", () => exportData("csv"));
+  $("export-json").addEventListener("click", () => exportData("json"));
+  initThemeToggle($("theme-toggle"));
 
   $("chat-form").addEventListener("submit", (event) => {
     event.preventDefault();

@@ -40,6 +40,11 @@ class Trend(BaseModel):
     window: int | None = Field(description="비교에 사용한 데이터 포인트 개수")
 
 
+class PeriodChange(BaseModel):
+    value: float = Field(description="첫 값 대비 최신 값의 변화량(원)")
+    pct: float = Field(description="첫 값 대비 최신 값의 변화율(%)")
+
+
 class SummaryResponse(BaseModel):
     count: int
     start_date: Date | None
@@ -49,3 +54,7 @@ class SummaryResponse(BaseModel):
     max: SummaryPoint | None
     latest: SummaryPoint | None
     trend: Trend
+    std_dev: float | None = Field(description="표본 표준편차(변동성). 데이터 2개 미만이면 null")
+    period_change: PeriodChange | None = Field(
+        description="기간 전체 변화(첫 값 → 최신 값). 데이터 2개 미만이면 null"
+    )

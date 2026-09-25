@@ -133,6 +133,8 @@ def test_summary_reflects_current_data(client):
     assert body["mean"] == 105.0
     assert body["latest"] == {"value": 110.0, "date": "2026-09-24"}
     assert body["trend"]["direction"] == "increase"
+    assert body["std_dev"] == 7.07
+    assert body["period_change"] == {"value": 10.0, "pct": 10.0}
 
 
 def test_cors_preflight_allows_configured_origin(client):
