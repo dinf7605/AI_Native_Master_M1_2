@@ -49,7 +49,3 @@ class SummaryResponse(BaseModel):
     max: SummaryPoint | None
     latest: SummaryPoint | None
     trend: Trend
-
-
-class MessageResponse(BaseModel):
-    message: str

@@ -2,18 +2,16 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, status
+from fastapi import APIRouter, Depends, status
 
 from app.dependencies import get_data_service
-from app.schemas.data import DataCreate, DataItem, MessageResponse, SummaryResponse
+from app.schemas.common import DocumentId, MessageResponse
+from app.schemas.data import DataCreate, DataItem, SummaryResponse
 from app.services.data_service import DataService
 
 router = APIRouter(prefix="/api/data", tags=["data"])
 
 Service = Annotated[DataService, Depends(get_data_service)]
-ItemId = Annotated[
-    str, Path(pattern=r"^[A-Za-z0-9_-]{1,128}$", description="데이터 문서 ID (목록 조회 응답의 id)")
-]
 
 
 @router.get(
@@ -49,11 +47,11 @@ def create_data(payload: DataCreate, service: Service):
     summary="데이터 수정",
     description="date, value, memo 전체를 교체한다. 없는 ID는 404, 다른 데이터와 날짜가 겹치면 409.",
 )
-def update_data(item_id: ItemId, payload: DataCreate, service: Service):
+def update_data(item_id: DocumentId, payload: DataCreate, service: Service):
     return service.update_item(item_id, payload)
 
 
 @router.delete("/{item_id}", response_model=MessageResponse, summary="데이터 삭제")
-def delete_data(item_id: ItemId, service: Service):
+def delete_data(item_id: DocumentId, service: Service):
     service.delete_item(item_id)
     return {"message": "삭제되었습니다."}
