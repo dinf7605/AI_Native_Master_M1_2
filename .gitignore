@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual env
+.venv/
+venv/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*service-account*.json
+*firebase-adminsdk*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
