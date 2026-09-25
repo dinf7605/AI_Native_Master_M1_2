@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>환율 데이터 AI 채팅</title>
+    <meta name="description" content="저장된 USD/KRW 환율 데이터 요약을 근거로 답하는 AI 채팅" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script type="module" src="js/app.js"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <h1>USD/KRW 환율 AI 채팅</h1>
+        <p class="subtitle">저장된 환율 데이터 요약을 근거로 답하는 AI</p>
+      </div>
+      <span id="server-status" class="status-badge" data-state="checking" role="status">서버 확인 중</span>
+    </header>
+
+    <div id="wake-banner" class="banner" role="status" hidden>
+      서버를 깨우는 중입니다. 무료 서버는 한동안 요청이 없으면 잠들어서, 첫 접속에 최대 1분 정도 걸릴 수 있어요.
+    </div>
+    <div id="toast" class="toast" role="alert" hidden></div>
+
+    <section class="summary" aria-labelledby="summary-title">
+      <h2 id="summary-title" class="summary-title">현재 데이터 요약 <span class="muted">(AI 답변의 근거)</span></h2>
+      <dl class="summary-grid">
+        <div class="stat stat-wide"><dt>기간</dt><dd id="sum-period">-</dd></div>
+        <div class="stat"><dt>데이터 수</dt><dd id="sum-count">-</dd></div>
+        <div class="stat"><dt>평균</dt><dd id="sum-mean">-</dd></div>
+        <div class="stat"><dt>최소</dt><dd id="sum-min">-</dd><small id="sum-min-date"></small></div>
+        <div class="stat"><dt>최대</dt><dd id="sum-max">-</dd><small id="sum-max-date"></small></div>
+        <div class="stat"><dt>최신</dt><dd id="sum-latest">-</dd><small id="sum-latest-date"></small></div>
+        <div class="stat stat-wide">
+          <dt>최근 추세</dt><dd id="sum-trend" data-tone="none">-</dd><small id="sum-trend-detail"></small>
+        </div>
+      </dl>
+    </section>
+
+    <div class="layout">
+      <aside class="sidebar" aria-labelledby="history-title">
+        <div class="sidebar-head">
+          <h2 id="history-title">대화 기록</h2>
+          <button id="new-chat" class="btn btn-primary btn-small" type="button">+ 새 대화</button>
+        </div>
+        <ul id="conversation-list" class="conversation-list"></ul>
+        <p id="conversation-empty" class="muted empty-note" hidden>저장된 대화가 없습니다.</p>
+      </aside>
+
+      <main class="main">
+        <div class="tabs" role="tablist" aria-label="화면 선택">
+          <button id="tab-chat" class="tab" role="tab" type="button" aria-selected="true" aria-controls="panel-chat">채팅</button>
+          <button id="tab-data" class="tab" role="tab" type="button" aria-selected="false" aria-controls="panel-data">데이터 관리</button>
+        </div>
+
+        <section id="panel-chat" class="panel chat-panel" role="tabpanel" aria-labelledby="tab-chat">
+          <h2 id="chat-title" class="chat-title">새 대화</h2>
+          <div id="messages" class="messages" aria-live="polite">
+            <div id="chat-empty" class="chat-empty">
+              <p>저장된 환율 데이터에 대해 물어보세요.</p>
+              <div class="suggestions">
+                <button class="chip" type="button" data-question="최근 환율 추세가 어때?">최근 추세가 어때?</button>
+                <button class="chip" type="button" data-question="평균 환율과 최신 환율을 비교해 줘.">평균과 최신값 비교</button>
+                <button class="chip" type="button" data-question="가장 높았던 날과 가장 낮았던 날은 언제야?">최고·최저 날짜</button>
+              </div>
+            </div>
+          </div>
+          <form id="chat-form" class="chat-form">
+            <label for="chat-input" class="visually-hidden">질문</label>
+            <textarea
+              id="chat-input"
+              rows="2"
+              maxlength="1000"
+              placeholder="예: 지금 환율은 평균보다 높은 편이야?"
+              required
+            ></textarea>
+            <button id="chat-send" class="btn btn-primary" type="submit">보내기</button>
+          </form>
+          <p class="hint">Enter로 전송, Shift+Enter로 줄바꿈 · AI는 요약 수치만 근거로 답하고 투자 조언은 하지 않습니다.</p>
+        </section>
+
+        <section id="panel-data" class="panel data-panel" role="tabpanel" aria-labelledby="tab-data" hidden>
+          <form id="data-form" class="data-form">
+            <h2 id="data-form-title">새 데이터 추가</h2>
+            <div class="fields">
+              <label>날짜 <input id="data-date" type="date" required /></label>
+              <label>환율 (원) <input id="data-value" type="number" step="0.01" min="0.01" required /></label>
+              <label class="grow">메모 <input id="data-memo" type="text" maxlength="200" placeholder="선택 (최대 200자)" /></label>
+            </div>
+            <div class="form-actions">
+              <button id="data-submit" class="btn btn-primary" type="submit">추가</button>
+              <button id="data-cancel" class="btn" type="button" hidden>수정 취소</button>
+            </div>
+          </form>
+
+          <h2 class="table-title">데이터 목록 <span id="data-count" class="muted"></span></h2>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">날짜</th>
+                  <th scope="col" class="num">환율</th>
+                  <th scope="col">메모</th>
+                  <th scope="col"><span class="visually-hidden">작업</span></th>
+                </tr>
+              </thead>
+              <tbody id="data-rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

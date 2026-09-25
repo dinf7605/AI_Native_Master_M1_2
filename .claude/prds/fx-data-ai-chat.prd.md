@@ -64,7 +64,7 @@
 | 2 | 데이터 API (Firestore) | Swagger UI에서 data CRUD 4개와 summary를 호출하고 결과를 확인할 수 있다. 잘못된 입력은 거부된다 | complete | `.claude/plans/fx-data-ai-chat-m2-data-api.plan.md` |
 | 3 | 대화 기록 API | Swagger UI에서 대화 저장, 목록, 단건 조회, 삭제가 동작한다 | complete | `.claude/plans/fx-data-ai-chat-m3-conversations-api.plan.md` |
 | 4 | 컨텍스트 주입 AI 채팅 API | 질문하면 요약을 반영한 답변이 오고, 대화가 자동 저장된다 | complete | `.claude/plans/fx-data-ai-chat-m4-chat-api.plan.md` |
-| 5 | 바닐라 프론트엔드 (필수 화면) | 채팅+로딩, 데이터 관리, 요약 표시, 대화 목록/불러오기를 한 화면 흐름에서 쓸 수 있다 | pending | — |
+| 5 | 바닐라 프론트엔드 (필수 화면) | 채팅+로딩, 데이터 관리, 요약 표시, 대화 목록/불러오기를 한 화면 흐름에서 쓸 수 있다 | complete | `.claude/plans/fx-data-ai-chat-m5-frontend.plan.md` |
 | 6 | 인사이트·UX 보너스 | 추가 지표, 추세 그래프, CSV/JSON 내보내기, 다크 모드가 동작한다 | pending | — |
 | 7 | 배포 & 문서화 | Render/Vercel URL로 접속할 수 있고, 배포된 `/docs`와 콜드스타트 안내가 확인되며, README와 스크린샷 3종이 완성된다 | pending | — |
 
