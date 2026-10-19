@@ -74,9 +74,9 @@
 
 | 구분 | URL |
 |---|---|
-| 프론트엔드 (Vercel) | ⏳ 배포 후 기입 |
-| 백엔드 API (Render) | ⏳ 배포 후 기입 |
-| Swagger UI | ⏳ 배포 후 기입 (`<백엔드 URL>/docs`) |
+| 프론트엔드 (Vercel) | https://ainativemasterm12-frontend-beryl.vercel.app |
+| 백엔드 API (Render) | https://ai-native-master-m1-2.onrender.com |
+| Swagger UI | https://ai-native-master-m1-2.onrender.com/docs |
 
 > **⚠️ 첫 접속이 느릴 수 있습니다 (Render 무료 플랜 콜드스타트)**
 > 무료 서버는 15분간 요청이 없으면 잠들고, 다음 요청 때 깨어나는 데 **최대 1분** 정도 걸립니다.

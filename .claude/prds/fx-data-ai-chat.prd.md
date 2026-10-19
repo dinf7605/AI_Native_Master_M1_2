@@ -66,7 +66,7 @@
 | 4 | 컨텍스트 주입 AI 채팅 API | 질문하면 요약을 반영한 답변이 오고, 대화가 자동 저장된다 | complete | `.claude/plans/fx-data-ai-chat-m4-chat-api.plan.md` |
 | 5 | 바닐라 프론트엔드 (필수 화면) | 채팅+로딩, 데이터 관리, 요약 표시, 대화 목록/불러오기를 한 화면 흐름에서 쓸 수 있다 | complete | `.claude/plans/fx-data-ai-chat-m5-frontend.plan.md` |
 | 6 | 인사이트·UX 보너스 | 추가 지표, 추세 그래프, CSV/JSON 내보내기, 다크 모드가 동작한다 | complete | `.claude/plans/fx-data-ai-chat-m6-insights-ux.plan.md` |
-| 7 | 배포 & 문서화 | Render/Vercel URL로 접속할 수 있고, 배포된 `/docs`와 콜드스타트 안내가 확인되며, README와 스크린샷 3종이 완성된다 | in-progress | 문서화 완료 (`README.md`, `docs/screenshots/` 4장, Vercel 빌드 스크립트). 배포와 README 배포 URL 기입이 남음 |
+| 7 | 배포 & 문서화 | Render/Vercel URL로 접속할 수 있고, 배포된 `/docs`와 콜드스타트 안내가 확인되며, README와 스크린샷 3종이 완성된다 | complete | Render `https://ai-native-master-m1-2.onrender.com`, Vercel `https://ainativemasterm12-frontend-beryl.vercel.app`. 배포 환경에서 채팅·CRUD·대화 불러오기·CORS 확인, README 배포 URL 기입 완료 |
 
 ## Open Questions
 - [x] **정확히 어떤 시계열인가?** → USD/KRW 일별 환율 (ECB 기준, Frankfurter API), 2026-03-02 ~ 2026-09-24, 146개. 마일스톤 1에서 확정.
@@ -75,7 +75,7 @@
 - [x] **"최근 추세"의 정의** → 최근 7포인트 평균을 직전 7포인트 평균과 비교하고, ±0.5% 미만이면 유지. 마일스톤 1에서 확정.
 - [x] **추가 지표는 무엇으로 하나?** → 요약에 표준편차(변동성)와 기간 전체 변화(첫 값 → 최신 값)를 넣는다. 7일 이동평균은 그래프에 표시한다. 마일스톤 6에서 확정.
 - [x] **채팅 1회 = 새 대화인가, 기존 대화에 이어 쓰기인가?** → `conversation_id`가 없으면 새 대화, 있으면 이어 쓰기. 최근 10개 메시지를 GPT에 함께 보낸다. 마일스톤 4에서 확정.
-- [ ] **Vercel 환경 변수로 API URL을 주입하는 방식**: 바닐라 정적 사이트는 런타임 환경 변수가 없다. 빌드 시 설정 파일을 생성하는 등 과제 요건을 충족할 방법을 확인해야 한다.
+- [x] **Vercel 환경 변수로 API URL을 주입하는 방식** → 빌드 명령 `npm run build`가 환경 변수 `API_BASE_URL`로 `js/config.js`를 생성한다. Output Directory는 `.`.
 - [x] **OpenAI 모델과 토큰/요청 상한** → 코디세이 게이트웨이(`https://copa.codyssey.kr/v1`), `gpt-5.4` (5.5는 차감 2배). `max_completion_tokens` 700, 질문 1000자, 이력 10개. 요청 빈도 제한은 배포 마일스톤에서 검토한다.
 
 ## Risks
