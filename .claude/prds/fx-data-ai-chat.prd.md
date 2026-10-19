@@ -66,7 +66,7 @@
 | 4 | 컨텍스트 주입 AI 채팅 API | 질문하면 요약을 반영한 답변이 오고, 대화가 자동 저장된다 | complete | `.claude/plans/fx-data-ai-chat-m4-chat-api.plan.md` |
 | 5 | 바닐라 프론트엔드 (필수 화면) | 채팅+로딩, 데이터 관리, 요약 표시, 대화 목록/불러오기를 한 화면 흐름에서 쓸 수 있다 | complete | `.claude/plans/fx-data-ai-chat-m5-frontend.plan.md` |
 | 6 | 인사이트·UX 보너스 | 추가 지표, 추세 그래프, CSV/JSON 내보내기, 다크 모드가 동작한다 | complete | `.claude/plans/fx-data-ai-chat-m6-insights-ux.plan.md` |
-| 7 | 배포 & 문서화 | Render/Vercel URL로 접속할 수 있고, 배포된 `/docs`와 콜드스타트 안내가 확인되며, README와 스크린샷 3종이 완성된다 | pending | — |
+| 7 | 배포 & 문서화 | Render/Vercel URL로 접속할 수 있고, 배포된 `/docs`와 콜드스타트 안내가 확인되며, README와 스크린샷 3종이 완성된다 | in-progress | 문서화 완료 (`README.md`, `docs/screenshots/` 4장, Vercel 빌드 스크립트). 배포와 README 배포 URL 기입이 남음 |
 
 ## Open Questions
 - [x] **정확히 어떤 시계열인가?** → USD/KRW 일별 환율 (ECB 기준, Frankfurter API), 2026-03-02 ~ 2026-09-24, 146개. 마일스톤 1에서 확정.
