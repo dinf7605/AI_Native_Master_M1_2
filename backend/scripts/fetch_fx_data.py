@@ -5,7 +5,7 @@ API 키가 필요 없고 표준 라이브러리만 사용한다. 영업일(ECB �
 
 사용법 (backend/ 에서):
     python scripts/fetch_fx_data.py
-    python scripts/fetch_fx_data.py --start 2026-03-02 --end 2026-09-24 --summary
+    python scripts/fetch_fx_data.py --start 2026-03-02 --end 2026-10-16 --summary
 """
 
 import argparse
@@ -23,7 +23,7 @@ API_URL = "https://api.frankfurter.dev/v1/{start}..{end}?base=USD&symbols=KRW"
 MEMO = "ECB reference rate (Frankfurter)"
 MIN_POINTS = 100
 DEFAULT_START = "2026-03-02"
-DEFAULT_END = "2026-09-24"
+DEFAULT_END = "2026-10-16"
 DEFAULT_OUTPUT = BACKEND_DIR / "data" / "usdkrw.csv"
 
 

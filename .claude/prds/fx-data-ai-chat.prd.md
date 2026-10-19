@@ -69,7 +69,7 @@
 | 7 | 배포 & 문서화 | Render/Vercel URL로 접속할 수 있고, 배포된 `/docs`와 콜드스타트 안내가 확인되며, README와 스크린샷 3종이 완성된다 | complete | Render `https://ai-native-master-m1-2.onrender.com`, Vercel `https://ainativemasterm12-frontend-beryl.vercel.app`. 배포 환경에서 채팅·CRUD·대화 불러오기·CORS 확인, README 배포 URL 기입 완료 |
 
 ## Open Questions
-- [x] **정확히 어떤 시계열인가?** → USD/KRW 일별 환율 (ECB 기준, Frankfurter API), 2026-03-02 ~ 2026-09-24, 146개. 마일스톤 1에서 확정.
+- [x] **정확히 어떤 시계열인가?** → USD/KRW 일별 환율 (ECB 기준, Frankfurter API), 2026-03-02 ~ 2026-09-24, 146개. 마일스톤 1에서 확정. 2026-10-19에 ~2026-10-16까지 갱신해 162개.
 - [x] **초기 데이터를 어떻게 적재하나?** → `scripts/seed_firestore.py`로 CSV를 적재한다. 이미 있는 날짜는 건너뛴다. 마일스톤 2에서 146건 적재 완료.
 - [x] **같은 date의 중복 데이터를 허용하나?** → 허용하지 않는다. 생성·수정 시 409. 마일스톤 2에서 확정.
 - [x] **"최근 추세"의 정의** → 최근 7포인트 평균을 직전 7포인트 평균과 비교하고, ±0.5% 미만이면 유지. 마일스톤 1에서 확정.
